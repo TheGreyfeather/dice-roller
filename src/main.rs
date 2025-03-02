@@ -60,7 +60,7 @@ fn main() {
     if extended {
         println!("-- Extended Info --");
         println!("Maximum Possible: {}", original_count * faces);
-        println!("Expected Average Result: {}", original_count as f32 * ((faces as f32 / 2.0) + 0.5));
+        println!("Average Die Result: {}", original_count as f32 * ((faces as f32 / 2.0) + 0.5));
         if extended && original_count > 1 {
             let average = (results.iter().sum::<usize>() / results.len()) as f32;
             println!("Rolled Average: {}", average);

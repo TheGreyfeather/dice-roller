@@ -58,23 +58,28 @@ fn main() {
     println!("Rolls: {:?}", results);
 
     if extended {
-        println!("-- Extended Info --");
+        println!("--- Extended Info ---");
         println!("Maximum Possible: {}", original_count * faces);
-        println!("Average Die Result: {}", original_count as f32 * ((faces as f32 / 2.0) + 0.5));
+        println!(
+            "Average {original_count}d{faces} Result: {}",
+            original_count as f32 * ((faces as f32 / 2.0) + 0.5)
+        );
         if extended && original_count > 1 {
-            let average = (results.iter().sum::<usize>() / results.len()) as f32;
-            println!("Rolled Average: {}", average);
             results.sort();
-            let quartile_one = median(&results[..(results.len() as f64 / 2.0).floor() as usize]) as f32;
+            let average = (results.iter().sum::<usize>() / results.len()) as f32;
+            println!("Die Average: {average}");
+            let quartile_one =
+                median(&results[..(results.len() as f32 / 2.0).floor() as usize]) as f32;
             let quartile_two = median(&results) as f32;
-            let quartile_three = median(&results[(results.len() as f64 / 2.0).ceil() as usize..]) as f32;
+            let quartile_three =
+                median(&results[(results.len() as f32 / 2.0).ceil() as usize..]) as f32;
             let mode = mode(&results);
-            let qcd = (quartile_three - quartile_one) / (quartile_three + quartile_one); 
+            let qcd = (quartile_three - quartile_one) / (quartile_three + quartile_one);
             let iqr = quartile_three - quartile_one;
-            println!("Q1: {}", quartile_one);
-            println!("Median: {}", quartile_two);
-            println!("Q3: {}", quartile_three);
-            println!("Mode: {}", mode);
+            println!("Q1: {quartile_one}");
+            println!("Median: {quartile_two}");
+            println!("Q3: {quartile_three}");
+            println!("Mode: {mode}");
             println!("QCD: {qcd}");
             println!("IQR: {iqr}");
         }

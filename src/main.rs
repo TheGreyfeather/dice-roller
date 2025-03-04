@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap};
 
 use clap::{Arg, ArgAction, Command};
 use rand::distr::{Distribution, Uniform};
@@ -35,6 +35,15 @@ fn main() {
                 .action(ArgAction::SetTrue)
                 .help("Show extended result set"),
         )
+        .arg(
+            Arg::new("timestamp")
+                .short('t')
+                .long("timestamp")
+                .value_name("timestamp")
+                .required(false)
+                .action(ArgAction::SetTrue)
+                .help("Include Timestamp"),
+        )
         .get_matches();
 
     let mut count: usize = *matches.get_one("count").unwrap_or(&1);
@@ -45,8 +54,10 @@ fn main() {
     let original_count = count;
     let faces: usize = *matches.get_one("faces").unwrap_or(&20);
     let extended: bool = *matches.get_one("extended").unwrap_or(&false);
+    let timestamp: bool = *matches.get_one("timestamp").unwrap_or(&false);
     let die = Uniform::new_inclusive(1, faces).unwrap();
     let mut results = Vec::new();
+    if timestamp {println!("Timestamp: {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f %Z"));}
     println!("Count: {}", count);
     println!("Faces: {}", faces);
 

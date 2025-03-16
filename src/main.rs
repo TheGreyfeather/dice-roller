@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use clap::{Arg, ArgAction, Command};
 use rand::distr::{Distribution, Uniform};
@@ -6,7 +6,7 @@ use rand::distr::{Distribution, Uniform};
 fn main() {
     let mut rng = rand::rng();
     let matches = Command::new("Dice Roller")
-        .version("0.1.0")
+        .version("0.1.2")
         .about(
             "Rolls dice, provided a count and faces. If none are provided, rolls 1d20 by default",
         )
@@ -16,6 +16,7 @@ fn main() {
                 .long("count")
                 .value_name("count")
                 .value_parser(clap::value_parser!(usize))
+                .default_value("1")
                 .help("How many times to roll"),
         )
         .arg(
@@ -24,6 +25,7 @@ fn main() {
                 .long("faces")
                 .value_name("faces")
                 .value_parser(clap::value_parser!(usize))
+                .default_value("20")
                 .help("How many die faces"),
         )
         .arg(
@@ -58,15 +60,15 @@ fn main() {
     let die = Uniform::new_inclusive(1, faces).unwrap();
     let mut results = Vec::new();
     if timestamp {println!("Timestamp: {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f %Z"));}
-    println!("Count: {}", count);
-    println!("Faces: {}", faces);
+    println!("Count: {count}");
+    println!("Faces: {faces}");
 
     while count > 0 {
         results.push(die.sample(&mut rng));
         count -= 1;
     }
     println!("Sum: {}", results.iter().sum::<usize>());
-    println!("Rolls: {:?}", results);
+    println!("Rolls: {results:?}");
 
     if extended {
         println!("--- Extended Info ---");

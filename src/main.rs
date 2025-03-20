@@ -6,7 +6,7 @@ use rand::distr::{Distribution, Uniform};
 fn main() {
     let mut rng = rand::rng();
     let matches = Command::new("Dice Roller")
-        .version("0.1.2")
+        .version("1.0.0")
         .about(
             "Rolls dice, provided a count and faces. If none are provided, rolls 1d20 by default",
         )

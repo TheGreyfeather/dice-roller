@@ -10,6 +10,6 @@ lto = "fat"
 panic = "abort"
 
 [dependencies]
-chrono = "0.4.40"
-clap = "4.5.32"
+clap = { version = "4.5.32", features = ["derive"] }
 rand = "0.9.0"
+chrono = "0.4.40"

@@ -1,7 +1,17 @@
 use std::collections::HashMap;
 
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, Command, ValueEnum, value_parser};
 use rand::distr::{Distribution, Uniform};
+
+#[derive(Clone, Copy, ValueEnum, Default, Debug)]
+pub enum DiceMode {
+    #[default]
+    None,
+    DropHighest,
+    DropLowest,
+    KeepHighest,
+    KeepLowest,
+}
 
 fn main() {
     let mut rng = rand::rng();
@@ -15,18 +25,37 @@ fn main() {
                 .short('c')
                 .long("count")
                 .value_name("count")
-                .value_parser(clap::value_parser!(usize))
+                .value_parser(value_parser!(usize))
                 .default_value("1")
                 .help("How many times to roll"),
         )
         .arg(
-            Arg::new("faces")
-                .short('f')
-                .long("faces")
-                .value_name("faces")
-                .value_parser(clap::value_parser!(usize))
+            Arg::new("die")
+                .short('d')
+                .long("die")
+                .value_name("die")
+                .value_parser(value_parser!(usize))
                 .default_value("20")
                 .help("How many die faces"),
+        )
+        .arg(
+            Arg::new("modify_total")
+                .long("modify_total")
+                .visible_alias("mt")
+                .value_name("modify_total")
+                .required(false)
+                .value_parser(value_parser!(i64))
+                .help("Modifies the Total"),
+        )
+        .arg(
+            Arg::new("roll_mode")
+                .long("roll_mode")
+                .short('m')
+                .value_name("roll_mode")
+                .required(false)
+                .value_parser(clap::builder::EnumValueParser::<DiceMode>::new())
+                .default_value("none")
+                .help("What Dice Roll Mode to use"),
         )
         .arg(
             Arg::new("extended")
@@ -54,23 +83,41 @@ fn main() {
         count = 1
     };
     let original_count = count;
-    let faces: usize = *matches.get_one("faces").unwrap_or(&20);
+    let faces: usize = *matches.get_one("die").unwrap_or(&20);
     let extended: bool = *matches.get_one("extended").unwrap_or(&false);
     let timestamp: bool = *matches.get_one("timestamp").unwrap_or(&false);
+    let dice_mode: DiceMode = *matches.get_one("roll_mode").unwrap_or(&DiceMode::None);
     let die = Uniform::new_inclusive(1, faces).unwrap();
     let mut results = Vec::new();
-    if timestamp {println!("Timestamp: {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f %Z"));}
+    if timestamp {
+        println!(
+            "Timestamp: {}",
+            chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f %Z")
+        );
+    }
     println!("Count: {count}");
     println!("Faces: {faces}");
+    println!("Mode: {dice_mode:?}");
 
     while count > 0 {
         results.push(die.sample(&mut rng));
         count -= 1;
     }
-    println!("Sum: {}", results.iter().sum::<usize>());
+    match dice_mode {
+        DiceMode::KeepLowest => println!("Result: {}", results.iter().min().unwrap()),
+        DiceMode::KeepHighest => println!("Result: {}", results.iter().max().unwrap()),
+        _ => println!("Sum: {}", results.iter().sum::<usize>()),
+    }
+
     println!("Rolls: {results:?}");
 
-    if extended {
+    if extended
+        && (match dice_mode {
+            DiceMode::KeepHighest => false,
+            DiceMode::KeepLowest => false,
+            _ => true,
+        })
+    {
         println!("--- Extended Info ---");
         println!("Maximum Possible: {}", original_count * faces);
         println!(

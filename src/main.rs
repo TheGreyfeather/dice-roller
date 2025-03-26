@@ -86,7 +86,7 @@ fn main() {
     let faces: usize = *matches.get_one("die").unwrap_or(&20);
     let extended: bool = *matches.get_one("extended").unwrap_or(&false);
     let timestamp: bool = *matches.get_one("timestamp").unwrap_or(&false);
-    let dice_mode: DiceMode = *matches.get_one("roll_mode").unwrap_or(&DiceMode::None);
+    let mut dice_mode: DiceMode = *matches.get_one("roll_mode").unwrap_or(&DiceMode::None);
     let die = Uniform::new_inclusive(1, faces).unwrap();
     let mut results = Vec::new();
     if timestamp {
@@ -99,11 +99,23 @@ fn main() {
     println!("Faces: {faces}");
     println!("Mode: {dice_mode:?}");
 
+    if count <= 1 {
+        dice_mode = DiceMode::None
+    }
+
     while count > 0 {
         results.push(die.sample(&mut rng));
         count -= 1;
     }
     match dice_mode {
+        DiceMode::DropLowest => println!(
+            "Sum: {}",
+            remove_lowest_n(&results, 1).into_iter().sum::<usize>()
+        ),
+        DiceMode::DropHighest => println!(
+            "Sum: {}",
+            remove_highest_n(&results, 1).into_iter().sum::<usize>()
+        ),
         DiceMode::KeepLowest => println!("Result: {}", results.iter().min().unwrap()),
         DiceMode::KeepHighest => println!("Result: {}", results.iter().max().unwrap()),
         _ => println!("Sum: {}", results.iter().sum::<usize>()),
@@ -168,4 +180,32 @@ fn median(numbers: &[usize]) -> usize {
     } else {
         numbers[numbers.len() / 2]
     }
+}
+
+fn remove_lowest_n(vec: &Vec<usize>, n: usize) -> Vec<usize> {
+    if n >= vec.len() {
+        return Vec::new();
+    }
+
+    let mut sorted_vec = vec.clone();
+    sorted_vec.sort_unstable();
+
+    vec.iter()
+        .filter(|&&x| !sorted_vec[0..n].contains(&x))
+        .cloned()
+        .collect()
+}
+
+fn remove_highest_n(vec: &Vec<usize>, n: usize) -> Vec<usize> {
+    if n >= vec.len() {
+        return Vec::new();
+    }
+
+    let mut sorted_vec = vec.clone();
+    sorted_vec.sort_unstable();
+
+    vec.iter()
+        .filter(|&&x| !sorted_vec[vec.len() - n..].contains(&x))
+        .cloned()
+        .collect()
 }

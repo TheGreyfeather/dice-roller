@@ -1,6 +1,6 @@
 [package]
 name = "dice-roller"
-version = "2.0.1"
+version = "2.0.2"
 edition = "2024"
 
 [profile.release]
@@ -10,6 +10,6 @@ lto = "fat"
 panic = "abort"
 
 [dependencies]
-clap = { version = "4.5.35", features = ["derive"] }
+clap = { version = "4.5.36", features = ["derive"] }
 rand = "0.9.0"
 chrono = "0.4.40"

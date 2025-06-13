@@ -16,7 +16,7 @@ pub enum DiceMode {
 fn main() {
     let mut rng = rand::rng();
     let matches = Command::new("Dice Roller")
-        .version("2.0.2")
+        .version("2.0.3")
         .about(
             "Rolls dice, provided a count and faces. If none are provided, rolls 1d20 by default",
         )
@@ -39,12 +39,13 @@ fn main() {
                 .help("How many die faces"),
         )
         .arg(
-            Arg::new("modify_total")
-                .long("modify_total")
-                .visible_alias("mt")
-                .value_name("modify_total")
+            Arg::new("adjust_total")
+                .short('a')
+                .long("adjust_total")
+                .value_name("adjust_total")
                 .required(false)
-                .value_parser(value_parser!(i64))
+                .value_parser(value_parser!(isize))
+                .allow_negative_numbers(true)
                 .help("Modifies the Total"),
         )
         .arg(
@@ -77,16 +78,17 @@ fn main() {
         )
         .get_matches();
 
-    let mut count: usize = *matches.get_one("count").unwrap_or(&1);
+    let mut count = *matches.get_one("count").unwrap_or(&1);
     if count == 0 {
         println!("Count was 0, setting to 1...");
         count = 1
     };
     let original_count = count;
-    let faces: usize = *matches.get_one("die").unwrap_or(&20);
-    let extended: bool = *matches.get_one("extended").unwrap_or(&false);
-    let timestamp: bool = *matches.get_one("timestamp").unwrap_or(&false);
-    let mut dice_mode: DiceMode = *matches.get_one("roll_mode").unwrap_or(&DiceMode::None);
+    let faces = *matches.get_one("die").unwrap_or(&20);
+    let extended = *matches.get_one("extended").unwrap_or(&false);
+    let timestamp = *matches.get_one("timestamp").unwrap_or(&false);
+    let mut dice_mode = *matches.get_one("roll_mode").unwrap_or(&DiceMode::None);
+    let adjust_total = *matches.get_one("adjust_total").unwrap_or(&0);
     let die = Uniform::new_inclusive(1, faces).unwrap();
     let mut results = Vec::new();
     if timestamp {
@@ -110,25 +112,56 @@ fn main() {
     match dice_mode {
         DiceMode::DropLowest => println!(
             "Sum: {}",
-            remove_lowest_n(&results, 1).into_iter().sum::<usize>()
+            remove_lowest_n(&results, 1)
+                .into_iter()
+                .sum::<usize>()
+                .checked_add_signed(adjust_total)
+                .unwrap_or(1)
         ),
         DiceMode::DropHighest => println!(
             "Sum: {}",
-            remove_highest_n(&results, 1).into_iter().sum::<usize>()
+            remove_highest_n(&results, 1)
+                .into_iter()
+                .sum::<usize>()
+                .checked_add_signed(adjust_total)
+                .unwrap_or(1)
         ),
-        DiceMode::KeepLowest => println!("Result: {}", results.iter().min().unwrap()),
-        DiceMode::KeepHighest => println!("Result: {}", results.iter().max().unwrap()),
-        _ => println!("Sum: {}", results.iter().sum::<usize>()),
+        DiceMode::KeepLowest => println!(
+            "Result: {}",
+            results
+                .iter()
+                .min()
+                .unwrap()
+                .checked_add_signed(adjust_total)
+                .unwrap_or(1)
+        ),
+        DiceMode::KeepHighest => println!(
+            "Result: {}",
+            results
+                .iter()
+                .max()
+                .unwrap()
+                .checked_add_signed(adjust_total)
+                .unwrap_or(1)
+        ),
+        _ => println!(
+            "Sum: {}",
+            results
+                .iter()
+                .sum::<usize>()
+                .checked_add_signed(adjust_total)
+                .unwrap_or(1)
+        ),
     }
 
     println!("Rolls: {results:?}");
+    if Some(adjust_total).is_some() && adjust_total != 0 {
+        println!("Adjusted by: {adjust_total:?}")
+    }
 
     if extended
-        && (match dice_mode {
-            DiceMode::KeepHighest => false,
-            DiceMode::KeepLowest => false,
-            _ => true,
-        })
+        && (!matches!(dice_mode, DiceMode::KeepHighest | DiceMode::KeepLowest) 
+        )
     {
         println!("--- Extended Info ---");
         println!("Maximum Possible: {}", original_count * faces);
@@ -182,12 +215,12 @@ fn median(numbers: &[usize]) -> usize {
     }
 }
 
-fn remove_lowest_n(vec: &Vec<usize>, n: usize) -> Vec<usize> {
+fn remove_lowest_n(vec: &[usize], n: usize) -> Vec<usize> {
     if n >= vec.len() {
         return Vec::new();
     }
 
-    let mut sorted_vec = vec.clone();
+    let mut sorted_vec = vec.to_owned();
     sorted_vec.sort_unstable();
 
     vec.iter()
@@ -196,12 +229,12 @@ fn remove_lowest_n(vec: &Vec<usize>, n: usize) -> Vec<usize> {
         .collect()
 }
 
-fn remove_highest_n(vec: &Vec<usize>, n: usize) -> Vec<usize> {
+fn remove_highest_n(vec: &[usize], n: usize) -> Vec<usize> {
     if n >= vec.len() {
         return Vec::new();
     }
 
-    let mut sorted_vec = vec.clone();
+    let mut sorted_vec = vec.to_owned();
     sorted_vec.sort_unstable();
 
     vec.iter()

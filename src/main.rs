@@ -16,7 +16,7 @@ pub enum DiceMode {
 fn main() {
     let mut rng = rand::rng();
     let matches = Command::new("Dice Roller")
-        .version("2.1.0")
+        .version("2.1.1")
         .about(
             "Rolls dice, provided a count and faces. If none are provided, rolls 1d20 by default",
         )
@@ -155,14 +155,11 @@ fn main() {
     }
 
     println!("Rolls: {results:?}");
-    if Some(adjust_total).is_some() && adjust_total != 0 {
+    if adjust_total != 0 {
         println!("Adjusted by: {adjust_total:?}")
     }
 
-    if extended
-        && (!matches!(dice_mode, DiceMode::KeepHighest | DiceMode::KeepLowest) 
-        )
-    {
+    if extended && !matches!(dice_mode, DiceMode::KeepHighest | DiceMode::KeepLowest) {
         println!("--- Extended Info ---");
         println!("Maximum Possible: {}", original_count * faces);
         println!(

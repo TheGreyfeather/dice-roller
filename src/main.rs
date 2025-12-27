@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use clap::{Arg, ArgAction, Command, ValueEnum, value_parser};
 use rand::distr::{Distribution, Uniform};
 
-#[derive(Clone, Copy, ValueEnum, Default, Debug)]
+#[derive(Clone, Copy, ValueEnum, Default, Debug, PartialEq)]
 pub enum DiceMode {
     #[default]
     None,
@@ -109,49 +109,44 @@ fn main() {
         results.push(die.sample(&mut rng));
         count -= 1;
     }
-    match dice_mode {
-        DiceMode::DropLowest => println!(
-            "Sum: {}",
-            remove_lowest_n(&results, 1)
-                .into_iter()
-                .sum::<usize>()
-                .checked_add_signed(adjust_total)
-                .unwrap_or(1)
-        ),
-        DiceMode::DropHighest => println!(
-            "Sum: {}",
-            remove_highest_n(&results, 1)
-                .into_iter()
-                .sum::<usize>()
-                .checked_add_signed(adjust_total)
-                .unwrap_or(1)
-        ),
-        DiceMode::KeepLowest => println!(
-            "Result: {}",
-            results
-                .iter()
-                .min()
-                .unwrap()
-                .checked_add_signed(adjust_total)
-                .unwrap_or(1)
-        ),
-        DiceMode::KeepHighest => println!(
-            "Result: {}",
-            results
-                .iter()
-                .max()
-                .unwrap()
-                .checked_add_signed(adjust_total)
-                .unwrap_or(1)
-        ),
-        _ => println!(
-            "Sum: {}",
-            results
-                .iter()
-                .sum::<usize>()
-                .checked_add_signed(adjust_total)
-                .unwrap_or(1)
-        ),
+    let result = match dice_mode {
+        DiceMode::DropLowest => remove_lowest_n(&results, 1)
+            .iter()
+            .sum::<usize>()
+            .checked_add_signed(adjust_total)
+            .unwrap_or(1),
+        DiceMode::DropHighest => remove_highest_n(&results, 1)
+            .iter()
+            .sum::<usize>()
+            .checked_add_signed(adjust_total)
+            .unwrap_or(1),
+        DiceMode::KeepLowest => results
+            .iter()
+            .min()
+            .unwrap()
+            .checked_add_signed(adjust_total)
+            .unwrap_or(1),
+        DiceMode::KeepHighest => results
+            .iter()
+            .max()
+            .unwrap()
+            .checked_add_signed(adjust_total)
+            .unwrap_or(1),
+        _ => results
+            .iter()
+            .sum::<usize>()
+            .checked_add_signed(adjust_total)
+            .unwrap_or(1),
+    };
+
+    if dice_mode == DiceMode::KeepHighest {
+        println!("Highest: {}", result);
+    } else if dice_mode == DiceMode::KeepLowest {
+        println!("Lowest: {}", result);
+    } else if count > 1 {
+        println!("Sum: {}", result);
+    } else {
+        println!("Result: {}", result);
     }
 
     println!("Rolls: {results:?}");
@@ -203,7 +198,7 @@ fn mode(numbers: &[usize]) -> usize {
 }
 
 fn median(numbers: &[usize]) -> usize {
-    if numbers.len() % 2 == 0 {
+    if numbers.len().is_multiple_of(2) {
         let left = numbers[(numbers.len() / 2) - 1];
         let right = numbers[numbers.len() / 2];
         (left + right) / 2

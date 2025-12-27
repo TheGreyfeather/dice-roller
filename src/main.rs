@@ -16,7 +16,7 @@ pub enum DiceMode {
 fn main() {
     let mut rng = rand::rng();
     let matches = Command::new("Dice Roller")
-        .version("2.1.1")
+        .version("2.1.2")
         .about(
             "Rolls dice, provided a count and faces. If none are provided, rolls 1d20 by default",
         )

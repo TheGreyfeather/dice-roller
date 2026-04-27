@@ -12,4 +12,4 @@ panic = "abort"
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
 rand = "0.10.1"
-chrono = "0.4.43"
+chrono = "0.4.44"

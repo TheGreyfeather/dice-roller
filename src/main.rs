@@ -14,12 +14,12 @@ pub enum DiceMode {
 }
 
 fn main() {
+    let version = env!("CARGO_PKG_VERSION");
+    let description = env!("CARGO_PKG_DESCRIPTION");
     let mut rng = rand::rng();
     let matches = Command::new("Dice Roller")
-        .version("2.1.2")
-        .about(
-            "Rolls dice, provided a count and faces. If none are provided, rolls 1d20 by default",
-        )
+        .version(version)
+        .about(description)
         .arg(
             Arg::new("count")
                 .short('c')
@@ -94,7 +94,7 @@ fn main() {
     if timestamp {
         println!(
             "Timestamp: {}",
-            chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f %Z")
+            jiff::Timestamp::now().to_string()
         );
     }
     println!("Count: {count}");
